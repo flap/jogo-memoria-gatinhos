@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Memória - Gatinhos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+        }
+
+        .card {
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            transition: all 0.3s ease;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            border-color: #007bff;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+            background: #f8f9fa;
+            border-color: #28a745;
+        }
+
+        .card.matched {
+            background: #d4edda;
+            border-color: #28a745;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            border-radius: 7px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            transform: rotateY(180deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            border-radius: 7px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .victory-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            animation: bounceIn 0.5s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: translate(-50%, -50%) scale(0.3); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+            70% { transform: translate(-50%, -50%) scale(0.9); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🐱 Jogo da Memória - Gatinhos 🐱</h1>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <span>Movimentos: </span>
+                <span id="moves">0</span>
+            </div>
+            <div class="info-item">
+                <span>Pares: </span>
+                <span id="pairs">0/8</span>
+            </div>
+            <div class="info-item">
+                <span>Tempo: </span>
+                <span id="timer">00:00</span>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <!-- As cartas serão geradas pelo JavaScript -->
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="startNewGame()">Novo Jogo</button>
+            <button class="btn-secondary" onclick="resetGame()">Reiniciar</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="victory-message" id="victoryMessage">
+        <h2>🎉 Parabéns! 🎉</h2>
+        <p>Você completou o jogo!</p>
+        <p id="finalStats"></p>
+        <button class="btn-primary" onclick="startNewGame()" style="margin-top: 15px;">Jogar Novamente</button>
+    </div>
+
+    <script>
+        // Emojis de gatinhos para o jogo
+        const catEmojis = ['😸', '😹', '😺', '😻', '😼', '😽', '🙀', '😿'];
+        
+        let gameBoard = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let gameStarted = false;
+        let startTime = null;
+        let timerInterval = null;
+
+        // Inicializar o jogo
+        function initGame() {
+            // Criar array com pares de gatinhos
+            gameBoard = [...catEmojis, ...catEmojis];
+            
+            // Embaralhar as cartas
+            shuffleArray(gameBoard);
+            
+            // Resetar variáveis do jogo
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            gameStarted = false;
+            startTime = null;
+            
+            // Limpar timer anterior
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            // Atualizar interface
+            updateUI();
+            createBoard();
+        }
+
+        // Embaralhar array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Criar o tabuleiro visual
+        function createBoard() {
+            const boardElement = document.getElementById('gameBoard');
+            boardElement.innerHTML = '';
+
+            gameBoard.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = index;
+                card.onclick = () => flipCard(index);
+
+                card.innerHTML = `
+                    <div class="card-back">🐾</div>
+                    <div class="card-front">${emoji}</div>
+                `;
+
+                boardElement.appendChild(card);
+            });
+        }
+
+        // Virar carta
+        function flipCard(index) {
+            // Verificar se o jogo pode continuar
+            if (flippedCards.length >= 2) return;
+            
+            const card = document.querySelector(`[data-index="${index}"]`);
+            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+            // Iniciar timer no primeiro movimento
+            if (!gameStarted) {
+                startGame();
+            }
+
+            // Virar a carta
+            card.classList.add('flipped');
+            flippedCards.push({ index, emoji: gameBoard[index], element: card });
+
+            // Verificar se duas cartas foram viradas
+            if (flippedCards.length === 2) {
+                moves++;
+                updateUI();
+                
+                setTimeout(() => {
+                    checkMatch();
+                }, 1000);
+            }
+        }
+
+        // Verificar se as cartas combinam
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+
+            if (card1.emoji === card2.emoji) {
+                // Cartas combinam
+                card1.element.classList.add('matched');
+                card2.element.classList.add('matched');
+                matchedPairs++;
+                
+                // Verificar vitória
+                if (matchedPairs === 8) {
+                    setTimeout(() => {
+                        showVictory();
+                    }, 500);
+                }
+            } else {
+                // Cartas não combinam - virar de volta
+                card1.element.classList.remove('flipped');
+                card2.element.classList.remove('flipped');
+            }
+
+            flippedCards = [];
+            updateUI();
+        }
+
+        // Iniciar o jogo (timer)
+        function startGame() {
+            gameStarted = true;
+            startTime = Date.now();
+            
+            timerInterval = setInterval(() => {
+                updateTimer();
+            }, 1000);
+        }
+
+        // Atualizar timer
+        function updateTimer() {
+            if (!startTime) return;
+            
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            
+            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+        }
+
+        // Atualizar interface
+        function updateUI() {
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('pairs').textContent = `${matchedPairs}/8`;
+        }
+
+        // Mostrar mensagem de vitória
+        function showVictory() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            const finalTime = document.getElementById('timer').textContent;
+            document.getElementById('finalStats').innerHTML = `
+                Tempo: ${finalTime}<br>
+                Movimentos: ${moves}
+            `;
+
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('victoryMessage').style.display = 'block';
+        }
+
+        // Esconder mensagem de vitória
+        function hideVictory() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('victoryMessage').style.display = 'none';
+        }
+
+        // Novo jogo
+        function startNewGame() {
+            hideVictory();
+            initGame();
+        }
+
+        // Reiniciar jogo atual
+        function resetGame() {
+            hideVictory();
+            
+            // Limpar timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            // Resetar variáveis
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            gameStarted = false;
+            startTime = null;
+            
+            // Resetar todas as cartas
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.classList.remove('flipped', 'matched');
+            });
+            
+            // Atualizar interface
+            updateUI();
+            document.getElementById('timer').textContent = '00:00';
+        }
+
+        // Fechar modal ao clicar no overlay
+        document.getElementById('overlay').onclick = hideVictory;
+
+        // Inicializar o jogo quando a página carregar
+        window.onload = initGame;
+    </script>
+</body>
+</html>
