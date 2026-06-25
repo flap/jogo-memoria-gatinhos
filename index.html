@@ -38,6 +38,59 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        /* Difficulty Selector */
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: 3px solid #e9ecef;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .difficulty-btn.active-easy {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border-color: #28a745;
+        }
+
+        .difficulty-btn.active-medium {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            color: white;
+            border-color: #ffc107;
+        }
+
+        .difficulty-btn.active-hard {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .difficulty-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
         .game-info {
             display: flex;
             justify-content: space-between;
@@ -56,13 +109,27 @@
 
         .game-board {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            max-width: 400px;
             margin: 0 auto 20px;
             padding: 20px;
             background: rgba(255, 255, 255, 0.5);
             border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .game-board.grid-easy {
+            grid-template-columns: repeat(4, 1fr);
+            max-width: 380px;
+        }
+
+        .game-board.grid-medium {
+            grid-template-columns: repeat(4, 1fr);
+            max-width: 400px;
+        }
+
+        .game-board.grid-hard {
+            grid-template-columns: repeat(5, 1fr);
+            max-width: 480px;
         }
 
         .card {
@@ -79,6 +146,11 @@
             transition: all 0.3s ease;
             position: relative;
             transform-style: preserve-3d;
+        }
+
+        .game-board.grid-hard .card {
+            width: 70px;
+            height: 70px;
         }
 
         .card:hover {
@@ -124,6 +196,14 @@
             justify-content: center;
             font-size: 35px;
             border-radius: 7px;
+        }
+
+        .game-board.grid-hard .card-front {
+            font-size: 30px;
+        }
+
+        .game-board.grid-hard .card-back {
+            font-size: 26px;
         }
 
         @keyframes pulse {
@@ -202,11 +282,60 @@
             z-index: 999;
             display: none;
         }
+
+        @media (max-width: 520px) {
+            .game-container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .card {
+                width: 60px;
+                height: 60px;
+            }
+
+            .game-board.grid-hard .card {
+                width: 55px;
+                height: 55px;
+            }
+
+            .card-front {
+                font-size: 28px;
+            }
+
+            .card-back {
+                font-size: 24px;
+            }
+
+            .game-info {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .difficulty-selector {
+                gap: 8px;
+            }
+
+            .difficulty-btn {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="game-container">
         <h1>🐱 Jogo da Memória - Gatinhos 🐱</h1>
+
+        <div class="difficulty-label">Dificuldade</div>
+        <div class="difficulty-selector">
+            <button class="difficulty-btn active-easy" id="btn-easy" onclick="selectDifficulty('easy')">😺 Fácil (3x4)</button>
+            <button class="difficulty-btn" id="btn-medium" onclick="selectDifficulty('medium')">😼 Médio (4x4)</button>
+            <button class="difficulty-btn" id="btn-hard" onclick="selectDifficulty('hard')">🙀 Difícil (4x5)</button>
+        </div>
         
         <div class="game-info">
             <div class="info-item">
@@ -215,7 +344,7 @@
             </div>
             <div class="info-item">
                 <span>Pares: </span>
-                <span id="pairs">0/8</span>
+                <span id="pairs">0/6</span>
             </div>
             <div class="info-item">
                 <span>Tempo: </span>
@@ -223,8 +352,8 @@
             </div>
         </div>
 
-        <div class="game-board" id="gameBoard">
-            <!-- As cartas serão geradas pelo JavaScript -->
+        <div class="game-board grid-easy" id="gameBoard">
+            <!-- As cartas serao geradas pelo JavaScript -->
         </div>
 
         <div class="controls">
@@ -242,9 +371,32 @@
     </div>
 
     <script>
-        // Emojis de gatinhos para o jogo
-        const catEmojis = ['😸', '😹', '😺', '😻', '😼', '😽', '🙀', '😿'];
-        
+        // Emojis de gatinhos para o jogo (10 total para hard mode)
+        const allCatEmojis = ['😸', '😹', '😺', '😻', '😼', '😽', '🙀', '😿', '😾', '🐱'];
+
+        // Difficulty configurations
+        const difficulties = {
+            easy: {
+                pairs: 6,
+                columns: 4,
+                gridClass: 'grid-easy',
+                label: 'Fácil'
+            },
+            medium: {
+                pairs: 8,
+                columns: 4,
+                gridClass: 'grid-medium',
+                label: 'Médio'
+            },
+            hard: {
+                pairs: 10,
+                columns: 5,
+                gridClass: 'grid-hard',
+                label: 'Difícil'
+            }
+        };
+
+        let currentDifficulty = 'easy';
         let gameBoard = [];
         let flippedCards = [];
         let matchedPairs = 0;
@@ -253,33 +405,54 @@
         let startTime = null;
         let timerInterval = null;
 
-        // Inicializar o jogo
+        // Select difficulty
+        function selectDifficulty(level) {
+            currentDifficulty = level;
+            updateDifficultyButtons();
+            initGame();
+        }
+
+        // Update difficulty button styles
+        function updateDifficultyButtons() {
+            const buttons = document.querySelectorAll('.difficulty-btn');
+            buttons.forEach(btn => {
+                btn.className = 'difficulty-btn';
+            });
+
+            const activeBtn = document.getElementById(`btn-${currentDifficulty}`);
+            activeBtn.classList.add(`active-${currentDifficulty}`);
+        }
+
+        // Initialize the game
         function initGame() {
-            // Criar array com pares de gatinhos
-            gameBoard = [...catEmojis, ...catEmojis];
+            const config = difficulties[currentDifficulty];
+            const emojis = allCatEmojis.slice(0, config.pairs);
+
+            // Create array with pairs
+            gameBoard = [...emojis, ...emojis];
             
-            // Embaralhar as cartas
+            // Shuffle cards
             shuffleArray(gameBoard);
             
-            // Resetar variáveis do jogo
+            // Reset game variables
             flippedCards = [];
             matchedPairs = 0;
             moves = 0;
             gameStarted = false;
             startTime = null;
             
-            // Limpar timer anterior
+            // Clear previous timer
             if (timerInterval) {
                 clearInterval(timerInterval);
                 timerInterval = null;
             }
             
-            // Atualizar interface
+            // Update interface
             updateUI();
             createBoard();
         }
 
-        // Embaralhar array
+        // Shuffle array (Fisher-Yates)
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -287,9 +460,13 @@
             }
         }
 
-        // Criar o tabuleiro visual
+        // Create the visual board
         function createBoard() {
             const boardElement = document.getElementById('gameBoard');
+            const config = difficulties[currentDifficulty];
+
+            // Update grid class
+            boardElement.className = `game-board ${config.gridClass}`;
             boardElement.innerHTML = '';
 
             gameBoard.forEach((emoji, index) => {
@@ -307,24 +484,23 @@
             });
         }
 
-        // Virar carta
+        // Flip card
         function flipCard(index) {
-            // Verificar se o jogo pode continuar
             if (flippedCards.length >= 2) return;
             
             const card = document.querySelector(`[data-index="${index}"]`);
             if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
 
-            // Iniciar timer no primeiro movimento
+            // Start timer on first move
             if (!gameStarted) {
                 startGame();
             }
 
-            // Virar a carta
+            // Flip the card
             card.classList.add('flipped');
             flippedCards.push({ index, emoji: gameBoard[index], element: card });
 
-            // Verificar se duas cartas foram viradas
+            // Check if two cards are flipped
             if (flippedCards.length === 2) {
                 moves++;
                 updateUI();
@@ -335,24 +511,25 @@
             }
         }
 
-        // Verificar se as cartas combinam
+        // Check if cards match
         function checkMatch() {
             const [card1, card2] = flippedCards;
+            const config = difficulties[currentDifficulty];
 
             if (card1.emoji === card2.emoji) {
-                // Cartas combinam
+                // Cards match
                 card1.element.classList.add('matched');
                 card2.element.classList.add('matched');
                 matchedPairs++;
                 
-                // Verificar vitória
-                if (matchedPairs === 8) {
+                // Check victory
+                if (matchedPairs === config.pairs) {
                     setTimeout(() => {
                         showVictory();
                     }, 500);
                 }
             } else {
-                // Cartas não combinam - virar de volta
+                // Cards don't match - flip back
                 card1.element.classList.remove('flipped');
                 card2.element.classList.remove('flipped');
             }
@@ -361,7 +538,7 @@
             updateUI();
         }
 
-        // Iniciar o jogo (timer)
+        // Start the game (timer)
         function startGame() {
             gameStarted = true;
             startTime = Date.now();
@@ -371,7 +548,7 @@
             }, 1000);
         }
 
-        // Atualizar timer
+        // Update timer
         function updateTimer() {
             if (!startTime) return;
             
@@ -382,20 +559,23 @@
             document.getElementById('timer').textContent = `${minutes}:${seconds}`;
         }
 
-        // Atualizar interface
+        // Update interface
         function updateUI() {
+            const config = difficulties[currentDifficulty];
             document.getElementById('moves').textContent = moves;
-            document.getElementById('pairs').textContent = `${matchedPairs}/8`;
+            document.getElementById('pairs').textContent = `${matchedPairs}/${config.pairs}`;
         }
 
-        // Mostrar mensagem de vitória
+        // Show victory message
         function showVictory() {
             if (timerInterval) {
                 clearInterval(timerInterval);
             }
 
+            const config = difficulties[currentDifficulty];
             const finalTime = document.getElementById('timer').textContent;
             document.getElementById('finalStats').innerHTML = `
+                Dificuldade: ${config.label}<br>
                 Tempo: ${finalTime}<br>
                 Movimentos: ${moves}
             `;
@@ -404,50 +584,50 @@
             document.getElementById('victoryMessage').style.display = 'block';
         }
 
-        // Esconder mensagem de vitória
+        // Hide victory message
         function hideVictory() {
             document.getElementById('overlay').style.display = 'none';
             document.getElementById('victoryMessage').style.display = 'none';
         }
 
-        // Novo jogo
+        // New game
         function startNewGame() {
             hideVictory();
             initGame();
         }
 
-        // Reiniciar jogo atual
+        // Reset current game
         function resetGame() {
             hideVictory();
             
-            // Limpar timer
+            // Clear timer
             if (timerInterval) {
                 clearInterval(timerInterval);
                 timerInterval = null;
             }
             
-            // Resetar variáveis
+            // Reset variables
             flippedCards = [];
             matchedPairs = 0;
             moves = 0;
             gameStarted = false;
             startTime = null;
             
-            // Resetar todas as cartas
+            // Reset all cards
             const cards = document.querySelectorAll('.card');
             cards.forEach(card => {
                 card.classList.remove('flipped', 'matched');
             });
             
-            // Atualizar interface
+            // Update interface
             updateUI();
             document.getElementById('timer').textContent = '00:00';
         }
 
-        // Fechar modal ao clicar no overlay
+        // Close modal on overlay click
         document.getElementById('overlay').onclick = hideVictory;
 
-        // Inicializar o jogo quando a página carregar
+        // Initialize game on page load
         window.onload = initGame;
     </script>
 </body>
